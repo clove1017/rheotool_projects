@@ -1,0 +1,6 @@
+# dynamicCode:
+# SHA1 = b23b327a38b7374a8a50ff2860d802c045e2b343
+
+codedFunctionObjectTemplate.C
+
+LIB = $(PWD)/../platforms/$(WM_OPTIONS)/lib/liboutputTest_b23b327a38b7374a8a50ff2860d802c045e2b343

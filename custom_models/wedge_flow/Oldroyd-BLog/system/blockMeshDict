@@ -1,0 +1,216 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Website:  https://openfoam.org                  |
+|   \\  /    A nd           | Version:  9                                     |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices
+(
+	//front face
+	(-0.1 0 0)
+	(-0.1 0.01 -0.000425)
+	(-0.1 0.01 0.000425) 
+	//back face
+	(0.1 0 0)	//3
+	(0.1 0.01 -0.000425)
+	(0.1 0.01 0.000425)
+	
+);
+
+blocks
+(
+	//left edge
+	//hex (0 1 2 0 29 17 15 29) (20 20 1) simpleGrading (1 1 1)
+	//right edge
+	//hex (30 18 16 30 3 4 5 3) (20 20 1) simpleGrading (1 1 1)
+	//testing - center
+	//hex (29 17 15 29 30 18 16 30) (20 20 1) simpleGrading (1 1 1)
+	//testing -sphere
+	//hex (29 17 15 29 6 33 31 6) (20 20 1) simpleGrading (1 1 1) //left of sphere
+	//hex (6 33 31 6 13 36 35 10) (20 20 1) simpleGrading (1 1 1) //left above sphere
+	//hex (6 13 10 6 8 13 10 8) (20 20 1) simpleGrading (1 1 1) //sphere
+	//hex (6 13 10 6 37 13 10 37) (20 20 1) simpleGrading (1 1 1) //sphere left
+	//hex (8 10 13 8 37 10 13 37) (20 20 1) simpleGrading (1 1 1) //sphere right
+	//hex (13 36 35 10 8 34 32 8) (20 20 1) simpleGrading (1 1 1) //right above sphere
+	//hex (8 34 32 8 30 18 16 30) (20 20 1) simpleGrading (1 1 1)//right of sphere
+	
+	hex (0 1 2 0 3 4 5 3) (20 1 20) simpleGrading (0.1 1 0.1)
+	//hex (8 18 16 8 3 4 5 3) (20 20 5) simpleGrading (1 1 1)//right edge
+	//hex (6 17 15 6 8 18 16 8) (20 20 5) simpleGrading (1 1 1) //top center
+	//hex (6 27 25 6 13 30 29 10) (100 100 5) simpleGrading (1 1 1) //leftbot center
+	//hex (13 30 29 10 8 28 26 8) (100 100 5) simpleGrading (1 1 1) //rightbot center
+	//hex (6 13 10 6 8 10 13 8) (20 1 1) simpleGrading (1 1 1) //sphere
+	//hex (6 22 19 6 13 23 20 10) (100 100 10) simpleGrading (1 1 1) //shell over sphere left
+	//hex (13 23 20 10 8 24 21 8) (100 100 10) simpleGrading (1 1 1) //shell over sphere right
+	//hex (22 27 25 19 24 28 26 21) (80 80 10) simpleGrading (1 1 1) //arch over shell
+
+);
+
+edges
+(
+	//arc 6 10 (-0.707106781 0.706469039 0.030024935)
+	//arc 10 8 (0.707106781 0.706469039 0.030024935)
+	//arc 6 13 (-0.707106781 0.706469039 -0.030024935)
+	//arc 13 8 (0.707106781 0.706469039 -0.030024935)
+	//arc 6 8 (0 0.999098097 0.042461669)
+	//arc 8 6 (0 0.999098097 -0.042461669)
+	//arc 22 24 (0 1.248872621 -0.053077086)
+	//arc 19 21 (0 1.248872621 0.053077086)
+	//arc 13 10 (0 1 0)
+	//arc 23 20 (0 1.25 0)
+	//arc 2 1 (-5 2.001805435 0)
+	//arc 5 4 (5 2.001805435 0)
+	//arc 17 15 (-1 2.001805435 0)
+	//arc 18 16 (1 2.001805435 0) 
+);
+
+boundary
+(
+
+    inlet
+    {
+      type patch;
+      faces
+      (
+            (0 1 2 0)
+      );
+    }
+    walls //left front-back; right back-front
+    {
+    	type wall;
+    	faces
+    	(
+		//left edge
+		//(2 1 17 15)
+		//right edge
+		//(16 18 4 5)
+		//test- center
+		(2 1 4 5)
+		
+		//(15 17 18 16)
+		//(15 17 33 31) //test- left of sphere
+		//(31 33 36 35) //test- above sphere left
+		//(35 36 34 32) //test- above sphere right
+		//(32 34 18 16) //test- right of sphere
+		
+    	);
+    }
+    front //left bot-top; right top-bot
+    {
+        type wedge;
+        faces
+        (
+		//left edge
+		//(0 2 15 6)
+		//right edge
+		//(8 16 5 3)
+		//center 
+		(0 2 5 3)
+		//leftcenter bot
+		//(6 25 29 10)
+		//rightcenter bot
+		//(10 29 26 8)
+		//arch over shell
+		//(19 25 26 21)
+		//shell
+		//(6 19 20 10) //left
+		//(10 20 21 8) //right
+		
+		//test- center
+		//(29 15 16 30)
+		//(29 15 31 6) //left of sphere
+		//(6 31 35 10) //left above sphere
+		//(6 10 8 13) //sphere
+		//(6 10 37 6) //sphere left
+		//(37 10 8 37) //sphere right
+		//(10 35 32 8) //right above sphere
+		//(8 32 16 30) //right of sphere
+		
+        );
+    }
+    back
+    {
+        type wedge;
+        faces
+        (
+        	//left edge
+        	//(0 6 17 1)
+        	//right edge
+        	//(8 18 4 3)
+        	//center
+		(0 1 4 3)
+		//leftcenter bot
+		//(6 27 30 13)
+		//rightcenter bot
+		//(13 30 28 8)
+        	//arch over shell
+        	//(22 27 28 24)
+        	//shell
+        	//(6 22 23 13) //left
+        	//(13 23 24 8) //right        	
+        	
+        	
+        	//test- center
+        	//(29 30 18 17)
+        	//(29 17 33 6) //left of sphere
+		//(6 33 36 13) //left above sphere
+		//(6 13 37 6) //sphere left
+		//(37 13 8 37) //sphere right
+		//(13 36 34 8) //right above sphere
+		//(8 34 18 30) //right of sphere
+        );
+    }
+    //sphere
+    //{
+      //  type wall;
+        //faces
+        //(
+	//	(6 13 10 6)
+	//	(8 13 10 8)
+        //);
+    //}
+    outlet
+    {
+        type patch;
+        faces
+        (
+		(3 4 5 3)
+        );
+    }
+    axis
+     { 
+           type empty;
+           faces  
+           (
+		//(0 6 6 0) //left edge
+		//(6 31 31 6) //sphereleft
+		(0 3 3 0) //spherecenter
+		//(8 3 3 8) //right edge
+		
+		
+		//(29 30 30 29) //test- center
+		//(30 3 3 30) //right edge
+		//(29 6 6 29) //test- left of sphere
+		//(6 37 37 6) //sphere left
+		//(37 8 8 37) //sphere right
+		//(8 30 30 8) //test-right of sphere
+           );
+      }      
+);
+
+mergePatchPairs
+(
+);
+
+// ************************************************************************* //

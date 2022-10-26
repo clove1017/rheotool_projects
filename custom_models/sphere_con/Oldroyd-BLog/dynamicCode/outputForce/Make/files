@@ -1,0 +1,6 @@
+# dynamicCode:
+# SHA1 = 7306e0537ad00ff8242d5996a9e3fef2fa3dbafc
+
+codedFunctionObjectTemplate.C
+
+LIB = $(PWD)/../platforms/$(WM_OPTIONS)/lib/liboutputForce_7306e0537ad00ff8242d5996a9e3fef2fa3dbafc

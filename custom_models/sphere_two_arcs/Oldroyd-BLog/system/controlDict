@@ -1,0 +1,141 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Website:  https://openfoam.org                  |
+|   \\  /    A nd           | Version:  9                                     |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      binary;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     rheoFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.3;
+
+deltaT          2e-4;
+
+writeControl    runTime;
+
+writeInterval   0.1;
+
+purgeWrite      0;
+
+writeFormat    binary;
+
+writePrecision  15;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   10;
+
+graphFormat     raw;
+
+runTimeModifiable yes;
+
+adjustTimeStep off;
+
+maxCo          0.01;
+
+maxDeltaT      0.001;
+
+functions{
+  outputForce{ //changed to reflect new function output
+    functionObjectLibs ("libutilityFunctionObjects.so");
+    type coded;
+    name calForce; //changed to reflect new function output. this name may show up in some file folder names
+    writeControl timeStep;
+    writeInterval      2;
+    enabled             yes;
+
+    codeWrite
+    #{ 
+      //const volScalarField& p = mesh().lookupObject<volScalarField>("p");
+      label sphere = mesh().boundaryMesh().findPatchID("sphere");
+      //const volVectorField& U = mesh().lookupObject<volVectorField>("U");
+      const volSymmTensorField& tau = mesh().lookupObject<volSymmTensorField>("tau");
+      //const volScalarField& p = mesh().lookupObject<volScalarField>("p");
+      //const dictionary& constDict = mesh().lookupObject<IOdictionary>("constitutiveProperties");
+
+      //dimensionedScalar rho_(constDict.subDict("parameters").lookup("rho"));
+      //dimensionedScalar etaS_(constDict.subDict("parameters").lookup("etaS"));
+      //dimensionedScalar etaP_(constDict.subDict("parameters").lookup("etaP"));
+  
+      //label cyl = mesh().boundaryMesh().findPatchID("cylinder");  //this appears to be searching a subset of the mesh() along the boundaries, locating the patches of interest
+                                                                  //by the patch ID "cylinder" which is probably the patches located along the cylinder boundary condition.
+                                                                  //the created label is later used to index through the boundaryField and obtain values relevant to the calculations
+      scalarList list;
+    
+      // Compute cd (drag coefficient) this is the original computation
+ 
+      //volTensorField L(fvc::grad(U));  //using fvc to access the grad function to get the gradient of velocity vector field U
+	    //volSymmTensorField F(tau); //symm returns the symmetric part of a second rank tensor. so this is shear stress added to 
+      //vector Fpatch = (F.boundaryField()[cyl]);                                                                                  //the symmetric velocity gradient multiplied by a viscosity coefficient minus pressure*density*Identity matrix
+                                                                                        //thus this appears to be a force balance constructing a force tensor, F
+      //vector Fpatch = gSum( ( -mesh().boundaryMesh()[cyl].faceAreas() ) & F.boundaryField()[cyl] )/(etaS_ + etaP_).value(); summation of force times area over etaS and etaP to obtain drag coefficient
+                                                                                                                        // note use of boundaryMesh()[cyl] only looks at values along cylinder interface
+      
+      //compute force applied to cylinder by pressure (neglects shear stress and viscous forces)
+      //vectorField area_normal = mesh().Sf().boundaryField()[cyl]; /// mesh().magSf().boundaryField()[cyl];
+      //vector Fpatch = F.boundaryField()[sphere]; //F appears to have units of force/area, multiplying by area normal should give force vector
+      //vector Fpatch = gSum((area_normal)*(p));
+      //gSum((F.boundaryField()[cyl]).component(symmTensor::XX))
+      //volScalarField x2(F.component(symmTensor::XX)); //take the XX component of the symmTensor
+      
+      
+      //tau::XY;
+      //olScalarField tau_xy(tau.component(symmTensor::XY));
+      //vectorField area_normal = mesh().Sf().boundaryField()[sphere];
+      volSymmTensorField F(tau);
+      vectorField area_normal = mesh().Sf().boundaryField()[sphere];
+      vector Fpatch = gSum(-area_normal & F.boundaryField()[sphere]);
+      //float tau_sum = gSum(tau_xy_sphere(tau_xy.boundaryField()[sphere]));
+      //int len_tau = sizeof(tau_xy.boundaryField()[sphere]);
+      //float sum_force_xy = 0;
+      //for (int i=0;i<len_tau;i++){
+        //sum_force_xy+=(tau_xy.boundaryField()[sphere][i]*area_normal*-1); //sum all shear stress acting along surface of the sphere
+      //}
+      //float tau_sum=gSum(tau_xy_sphere);
+      //vector Fpatch = F.boundaryField()[sphere];
+      //vector tautype = tau[sphere];
+      list.append(mesh().time().value());  // Time (col 0)  
+      list.append(Fpatch.x());             // xx component of force   (col 1)  this appears to be using .x() to reference the x component of the vector Fpatch, Fpatch being declared as a vector object
+
+          // Write data: this function is expected to access the writeData file which is responsible for constructing all simulation result files.
+          //without that, no data is saved from simulation run. 
+
+      string comsh;           
+      string filename("sphere_stress.txt");
+	    std::stringstream doub2str; doub2str.precision(12);
+
+      comsh = "./writeData " + filename; //set up to write data to cyl_force.txt
+      forAll(list, id)
+      {
+        doub2str.str(std::string());
+        doub2str << list[id]; 
+        comsh += " " + doub2str.str(); //write time signature for controlDict function and force 
+        //comsh += "  " + list[id];
+      }
+           
+      if (Pstream::master())
+      {
+	      system(comsh);
+      }
+
+	 #};
+    }
+ 
+}
+// ************************************************************************* //
